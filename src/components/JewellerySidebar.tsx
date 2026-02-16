@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Upload, Plus, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { jewelleryItems, categories, type JewelleryCategory, type JewelleryItem } from "@/data/jewellery";
+import JewelleryPreview3D from "@/components/3d/JewelleryPreview3D";
 
 interface JewellerySidebarProps {
   onSelectItem: (item: JewelleryItem) => void;
@@ -113,12 +114,18 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
                       : "border-border hover:border-gold/40"
                   }`}
                 >
-                  <div className="aspect-square p-2">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                    />
+                  <div className="aspect-square">
+                    {item.id.startsWith("custom-") ? (
+                      <div className="w-full h-full p-2">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <JewelleryPreview3D modelId={item.id} className="w-full h-full" />
+                    )}
                   </div>
                   <div className="p-1.5 sm:p-2 text-left">
                     <p className="text-foreground text-[10px] sm:text-xs font-body truncate">{item.name}</p>
