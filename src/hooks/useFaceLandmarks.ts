@@ -139,7 +139,7 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
         const jawRight = face[LANDMARK_INDICES.jawRight];
         const neckCenter: NormalizedLandmark = {
           x: (jawLeft.x + jawRight.x) / 2,
-          y: chin.y + (chin.y - noseTip.y) * 0.5,
+          y: chin.y + (chin.y - noseTip.y) * 0.18,
           z: chin.z,
           visibility: 1,
         };
