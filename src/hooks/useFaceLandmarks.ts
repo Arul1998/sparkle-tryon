@@ -36,9 +36,9 @@ const LANDMARK_INDICES = {
   forehead: 10,
   leftCheek: 323,
   rightCheek: 93,
-  // For ear bottom (earring placement)
-  leftEarBottom: 132,
-  rightEarBottom: 361,
+  // For earring placement — outer ear/earlobe area
+  leftEarBottom: 234,
+  rightEarBottom: 454,
   // Jaw line points for necklace
   jawLeft: 172,
   jawRight: 397,
