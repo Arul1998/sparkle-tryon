@@ -1,6 +1,6 @@
 import { Suspense, useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ContactShadows, Environment } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import * as THREE from "three";
 import {
   DiamondStudEarring,
@@ -62,7 +62,6 @@ const PoseTracker = ({
       );
     }
 
-    // Smooth lerp for natural movement
     const lerpFactor = 0.15;
     currentRotation.current.x += (targetRotation.current.x - currentRotation.current.x) * lerpFactor;
     currentRotation.current.y += (targetRotation.current.y - currentRotation.current.y) * lerpFactor;
@@ -96,42 +95,28 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: AR
     >
       <Canvas
         camera={{ position: [0, 0, 3], fov: isNecklace ? 40 : 35 }}
-        gl={{ alpha: true, antialias: true, premultipliedAlpha: false }}
+        gl={{
+          alpha: true,
+          antialias: true,
+          premultipliedAlpha: false,
+          powerPreference: "low-power",
+          preserveDrawingBuffer: false,
+        }}
         style={{ background: "transparent" }}
         frameloop="always"
-        shadows
+        dpr={[1, 1.5]}
       >
         <Suspense fallback={null}>
-          {/* Rich lighting for realistic metal/gem look */}
-          <ambientLight intensity={0.4} />
-          <directionalLight
-            position={[3, 5, 5]}
-            intensity={2.0}
-            castShadow
-            shadow-mapSize-width={512}
-            shadow-mapSize-height={512}
-          />
-          <directionalLight position={[-4, 3, -2]} intensity={0.8} color="#ffeedd" />
-          <pointLight position={[0, -2, 4]} intensity={0.6} color="#ffd700" />
-          <pointLight position={[2, 1, -3]} intensity={0.4} color="#fff5e6" />
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[3, 5, 5]} intensity={1.8} />
+          <directionalLight position={[-4, 3, -2]} intensity={0.6} color="#ffeedd" />
+          <pointLight position={[0, -2, 4]} intensity={0.5} color="#ffd700" />
 
-          {/* Environment map for realistic reflections */}
-          <Environment preset="studio" environmentIntensity={0.6} />
+          <Environment preset="studio" environmentIntensity={0.5} />
 
           <PoseTracker headPose={headPose} category={category}>
             <ModelComponent headPose={headPose} />
           </PoseTracker>
-
-          {/* Contact shadows for grounding */}
-          {isNecklace && (
-            <ContactShadows
-              position={[0, -1.5, 0]}
-              opacity={0.3}
-              scale={3}
-              blur={2}
-              far={3}
-            />
-          )}
         </Suspense>
       </Canvas>
     </div>
