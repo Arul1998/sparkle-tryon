@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { FaceLandmarks } from "@/hooks/useFaceLandmarks";
 import type { HandLandmarks } from "@/hooks/useHandLandmarks";
 import type { JewelleryItem, JewelleryCategory } from "@/data/jewellery";
+import ARJewellery3D from "@/components/3d/ARJewellery3D";
 
 interface Placement {
   type: "single" | "dual";
@@ -115,25 +116,39 @@ const ARJewelleryOverlay = ({
 
   if (!placement) return null;
 
+  const isCustom = item.id.startsWith("custom-");
+
   const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => {
+    if (isCustom) {
+      return (
+        <img
+          key={key}
+          src={item.image}
+          alt={item.name}
+          className="absolute pointer-events-none"
+          style={{
+            left: x,
+            top: y,
+            width: size,
+            height: size,
+            transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+            objectFit: "contain",
+            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4)) brightness(1.05) contrast(1.1) saturate(1.2)",
+            transition: "left 0.05s linear, top 0.05s linear, width 0.08s ease, height 0.08s ease",
+          }}
+          draggable={false}
+        />
+      );
+    }
+
     return (
-      <img
+      <ARJewellery3D
         key={key}
-        src={item.image}
-        alt={item.name}
-        className="absolute pointer-events-none"
-        style={{
-          left: x,
-          top: y,
-          width: size,
-          height: size,
-          transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-          objectFit: "contain",
-          mixBlendMode: "normal",
-          filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4)) drop-shadow(0 0 3px rgba(255,215,0,0.2)) brightness(1.05) contrast(1.1) saturate(1.2)",
-          transition: "left 0.05s linear, top 0.05s linear, width 0.08s ease, height 0.08s ease",
-        }}
-        draggable={false}
+        modelId={item.id}
+        x={x}
+        y={y}
+        size={size}
+        rotation={rotation}
       />
     );
   };
