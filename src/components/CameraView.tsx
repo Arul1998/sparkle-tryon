@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 export interface TrackingData {
   face: FaceLandmarks | null;
   hands: HandLandmarks[];
+  videoWidth: number;
+  videoHeight: number;
 }
 
 interface CameraViewProps {
@@ -45,7 +47,13 @@ const CameraView = ({ onTrackingUpdate, children }: CameraViewProps) => {
 
   // Forward tracking data to parent
   useEffect(() => {
-    onTrackingUpdate?.({ face: faceLandmarks, hands: handLandmarks });
+    const video = videoRef.current;
+    onTrackingUpdate?.({
+      face: faceLandmarks,
+      hands: handLandmarks,
+      videoWidth: video?.videoWidth ?? 0,
+      videoHeight: video?.videoHeight ?? 0,
+    });
   }, [faceLandmarks, handLandmarks, onTrackingUpdate]);
 
   const startCamera = useCallback(async () => {
