@@ -78,8 +78,7 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: AR
 
   if (!ModelComponent) return null;
 
-  const isLargeCanvas = category === "necklaces" || category === "earrings";
-  const canvasSize = isLargeCanvas ? size * 1.3 : size;
+  const canvasSize = size * 1.3;
 
   return (
     <div
@@ -94,7 +93,7 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: AR
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 3], fov: isLargeCanvas ? 40 : 35 }}
+        camera={{ position: [0, 0, 3], fov: (category === "necklaces" || category === "earrings") ? 40 : 35 }}
         gl={{
           alpha: true,
           antialias: true,
