@@ -210,10 +210,13 @@ const ARJewelleryOverlay = ({
             left: x,
             top: y,
             width: size,
-            height: size * 1.3, // earrings are taller than wide
+            height: size * 1.3,
             transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
             objectFit: "contain",
-            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.35)) brightness(1.08) contrast(1.1) saturate(1.15)",
+            mixBlendMode: isCustom ? "normal" : "screen",
+            filter: isCustom
+              ? "drop-shadow(0 2px 8px rgba(0,0,0,0.35))"
+              : "brightness(1.3) contrast(1.2) saturate(1.2) drop-shadow(0 2px 6px rgba(255,215,0,0.4))",
             transition: "left 0.04s linear, top 0.04s linear, width 0.06s ease, height 0.06s ease",
           }}
           draggable={false}
