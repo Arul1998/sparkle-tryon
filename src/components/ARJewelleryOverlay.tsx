@@ -194,12 +194,11 @@ const ARJewelleryOverlay = ({
 
   if (!placement) return null;
 
-  const isEarring = item.category === "earrings";
   const isCustom = item.id.startsWith("custom-");
 
   const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => {
-    // Earrings always use 2D image overlay (like Snapchat) — lightweight & reliable
-    if (isCustom || isEarring) {
+    // Custom uploads use 2D image overlay
+    if (isCustom) {
       return (
         <img
           key={key}
@@ -221,6 +220,7 @@ const ARJewelleryOverlay = ({
       );
     }
 
+    // All built-in items (earrings, necklaces, rings, bracelets) use 3D rendering
     return (
       <ARJewellery3D
         key={key}
