@@ -273,23 +273,21 @@ export const PearlChoker = ({ color = "#C0C0C0", headPose }: ModelProps) => {
 
 // ─── Diamond Solitaire Ring ───
 export const SolitaireRing = ({ color = "#FFD700" }: ModelProps) => {
-  const ref = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * 0.6;
-  });
-
   return (
-    <group ref={ref} rotation={[Math.PI * 0.3, 0, 0]} scale={1.1}>
+    <group rotation={[Math.PI * 0.5, 0, 0]} scale={1.1}>
+      {/* Ring band — viewed edge-on to wrap around finger */}
       <mesh>
-        <torusGeometry args={[0.4, 0.06, 16, 32]} />
+        <torusGeometry args={[0.35, 0.07, 16, 32]} />
         <meshStandardMaterial color={color} metalness={0.95} roughness={0.08} />
       </mesh>
-      <mesh position={[0, 0.4, 0]}>
-        <cylinderGeometry args={[0.12, 0.06, 0.15, 6]} />
+      {/* Setting/prong */}
+      <mesh position={[0, 0, -0.35]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.1, 0.05, 0.15, 6]} />
         <meshStandardMaterial color={color} metalness={0.95} roughness={0.1} />
       </mesh>
-      <mesh position={[0, 0.55, 0]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[0.15, 0.2, 8]} />
+      {/* Diamond — sits on top of the band */}
+      <mesh position={[0, 0, -0.5]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.13, 0.18, 8]} />
         <meshPhysicalMaterial
           color="#ffffff"
           transmission={0.9}
@@ -300,8 +298,8 @@ export const SolitaireRing = ({ color = "#FFD700" }: ModelProps) => {
           clearcoat={1}
         />
       </mesh>
-      <mesh position={[0, 0.5, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 0.06, 8]} />
+      <mesh position={[0, 0, -0.42]} rotation={[-Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.13, 0.13, 0.05, 8]} />
         <meshPhysicalMaterial
           color="#ffffff"
           transmission={0.9}
