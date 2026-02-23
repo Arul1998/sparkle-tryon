@@ -91,7 +91,7 @@ function getFacePlacement(
     // rotationAngle > 0 means face turned right (left ear more visible)
     // rotationAngle < 0 means face turned left (right ear more visible)
     const rot = landmarks.rotationAngle;
-    const threshold = 12; // degrees — hide far ear beyond this
+    const threshold = 5; // degrees — aggressively hide far ear
     const showLeft = rot > -threshold;
     const showRight = rot < threshold;
 
