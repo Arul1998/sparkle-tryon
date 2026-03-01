@@ -54,6 +54,7 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
     necklaces: "💎 Face your camera — tracks your neckline",
     rings: "💍 Show your hand palm-up to the camera",
     bracelets: "⌚ Show your wrist to the camera",
+    glasses: "👓 Face your camera — tracks your eyes & nose",
   };
 
   const guideSteps = [
