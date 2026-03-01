@@ -351,3 +351,208 @@ export const TennisBracelet = ({ color = "#FFD700" }: ModelProps) => {
     </group>
   );
 };
+
+// ─── Wayfarer Glasses ───
+export const WayfarerGlasses = ({ color = "#1a1a1a" }: ModelProps) => {
+  const frameColor = color;
+  const lensColor = "#222222";
+
+  return (
+    <group scale={1.3}>
+      {/* Left lens frame */}
+      <mesh position={[-0.38, 0, 0]}>
+        <boxGeometry args={[0.55, 0.42, 0.06]} />
+        <meshStandardMaterial color={frameColor} metalness={0.3} roughness={0.4} />
+      </mesh>
+      {/* Left lens */}
+      <mesh position={[-0.38, 0, 0.01]}>
+        <boxGeometry args={[0.48, 0.35, 0.02]} />
+        <meshPhysicalMaterial
+          color={lensColor}
+          transmission={0.15}
+          roughness={0.0}
+          metalness={0.1}
+          ior={1.5}
+          thickness={0.1}
+          opacity={0.85}
+          transparent
+        />
+      </mesh>
+
+      {/* Right lens frame */}
+      <mesh position={[0.38, 0, 0]}>
+        <boxGeometry args={[0.55, 0.42, 0.06]} />
+        <meshStandardMaterial color={frameColor} metalness={0.3} roughness={0.4} />
+      </mesh>
+      {/* Right lens */}
+      <mesh position={[0.38, 0, 0.01]}>
+        <boxGeometry args={[0.48, 0.35, 0.02]} />
+        <meshPhysicalMaterial
+          color={lensColor}
+          transmission={0.15}
+          roughness={0.0}
+          metalness={0.1}
+          ior={1.5}
+          thickness={0.1}
+          opacity={0.85}
+          transparent
+        />
+      </mesh>
+
+      {/* Bridge */}
+      <mesh position={[0, 0.05, 0.02]}>
+        <boxGeometry args={[0.12, 0.06, 0.04]} />
+        <meshStandardMaterial color={frameColor} metalness={0.3} roughness={0.4} />
+      </mesh>
+
+      {/* Left temple arm */}
+      <mesh position={[-0.68, 0.1, -0.4]} rotation={[0.15, 0, 0]}>
+        <boxGeometry args={[0.04, 0.04, 0.85]} />
+        <meshStandardMaterial color={frameColor} metalness={0.3} roughness={0.4} />
+      </mesh>
+      {/* Right temple arm */}
+      <mesh position={[0.68, 0.1, -0.4]} rotation={[0.15, 0, 0]}>
+        <boxGeometry args={[0.04, 0.04, 0.85]} />
+        <meshStandardMaterial color={frameColor} metalness={0.3} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+};
+
+// ─── Aviator Glasses ───
+export const AviatorGlasses = ({ color = "#FFD700" }: ModelProps) => {
+  const frameColor = color;
+
+  return (
+    <group scale={1.3}>
+      {/* Left lens frame ring */}
+      <mesh position={[-0.38, -0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.28, 0.02, 8, 32]} />
+        <meshStandardMaterial color={frameColor} metalness={0.95} roughness={0.08} />
+      </mesh>
+      {/* Left lens */}
+      <mesh position={[-0.38, -0.05, 0]}>
+        <circleGeometry args={[0.26, 32]} />
+        <meshPhysicalMaterial
+          color="#8B4513"
+          transmission={0.25}
+          roughness={0.0}
+          metalness={0.05}
+          ior={1.5}
+          thickness={0.1}
+          opacity={0.7}
+          transparent
+        />
+      </mesh>
+
+      {/* Right lens frame ring */}
+      <mesh position={[0.38, -0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.28, 0.02, 8, 32]} />
+        <meshStandardMaterial color={frameColor} metalness={0.95} roughness={0.08} />
+      </mesh>
+      {/* Right lens */}
+      <mesh position={[0.38, -0.05, 0]}>
+        <circleGeometry args={[0.26, 32]} />
+        <meshPhysicalMaterial
+          color="#8B4513"
+          transmission={0.25}
+          roughness={0.0}
+          metalness={0.05}
+          ior={1.5}
+          thickness={0.1}
+          opacity={0.7}
+          transparent
+        />
+      </mesh>
+
+      {/* Top bridge bar */}
+      <mesh position={[0, 0.18, 0.02]}>
+        <boxGeometry args={[0.9, 0.025, 0.025]} />
+        <meshStandardMaterial color={frameColor} metalness={0.95} roughness={0.08} />
+      </mesh>
+
+      {/* Nose bridge */}
+      <mesh position={[0, 0.02, 0.03]}>
+        <boxGeometry args={[0.08, 0.06, 0.03]} />
+        <meshStandardMaterial color={frameColor} metalness={0.95} roughness={0.08} />
+      </mesh>
+
+      {/* Left temple arm */}
+      <mesh position={[-0.68, 0.1, -0.4]} rotation={[0.15, 0, 0]}>
+        <boxGeometry args={[0.025, 0.025, 0.85]} />
+        <meshStandardMaterial color={frameColor} metalness={0.95} roughness={0.08} />
+      </mesh>
+      {/* Right temple arm */}
+      <mesh position={[0.68, 0.1, -0.4]} rotation={[0.15, 0, 0]}>
+        <boxGeometry args={[0.025, 0.025, 0.85]} />
+        <meshStandardMaterial color={frameColor} metalness={0.95} roughness={0.08} />
+      </mesh>
+    </group>
+  );
+};
+
+// ─── Round Spectacles ───
+export const RoundSpectacles = ({ color = "#8B4513" }: ModelProps) => {
+  const frameColor = color;
+
+  return (
+    <group scale={1.3}>
+      {/* Left lens frame */}
+      <mesh position={[-0.35, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.24, 0.025, 8, 32]} />
+        <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.5} />
+      </mesh>
+      {/* Left lens */}
+      <mesh position={[-0.35, 0, 0]}>
+        <circleGeometry args={[0.22, 32]} />
+        <meshPhysicalMaterial
+          color="#ffffff"
+          transmission={0.9}
+          roughness={0.0}
+          metalness={0.0}
+          ior={1.5}
+          thickness={0.05}
+          opacity={0.15}
+          transparent
+        />
+      </mesh>
+
+      {/* Right lens frame */}
+      <mesh position={[0.35, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.24, 0.025, 8, 32]} />
+        <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.5} />
+      </mesh>
+      {/* Right lens */}
+      <mesh position={[0.35, 0, 0]}>
+        <circleGeometry args={[0.22, 32]} />
+        <meshPhysicalMaterial
+          color="#ffffff"
+          transmission={0.9}
+          roughness={0.0}
+          metalness={0.0}
+          ior={1.5}
+          thickness={0.05}
+          opacity={0.15}
+          transparent
+        />
+      </mesh>
+
+      {/* Bridge */}
+      <mesh position={[0, 0.05, 0.02]}>
+        <boxGeometry args={[0.1, 0.04, 0.03]} />
+        <meshStandardMaterial color="#C5A03F" metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* Left temple arm */}
+      <mesh position={[-0.62, 0.08, -0.4]} rotation={[0.15, 0, 0]}>
+        <boxGeometry args={[0.03, 0.03, 0.85]} />
+        <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.5} />
+      </mesh>
+      {/* Right temple arm */}
+      <mesh position={[0.62, 0.08, -0.4]} rotation={[0.15, 0, 0]}>
+        <boxGeometry args={[0.03, 0.03, 0.85]} />
+        <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.5} />
+      </mesh>
+    </group>
+  );
+};

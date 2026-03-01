@@ -9,6 +9,9 @@ import {
   PearlChoker,
   SolitaireRing,
   TennisBracelet,
+  WayfarerGlasses,
+  AviatorGlasses,
+  RoundSpectacles,
 } from "./JewelleryModels";
 import type { HeadPose } from "@/components/ARJewelleryOverlay";
 import type { JewelleryCategory } from "@/data/jewellery";
@@ -30,6 +33,9 @@ const modelMap: Record<string, React.FC<{ headPose?: HeadPose | null }>> = {
   n2: PearlChoker,
   r1: SolitaireRing,
   b1: TennisBracelet,
+  g1: WayfarerGlasses,
+  g2: AviatorGlasses,
+  g3: RoundSpectacles,
 };
 
 // Smoothly interpolates head pose to avoid jitter
@@ -93,7 +99,7 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: AR
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 3], fov: (category === "necklaces" || category === "earrings") ? 40 : 35 }}
+        camera={{ position: [0, 0, 3], fov: (category === "necklaces" || category === "earrings" || category === "glasses") ? 40 : 35 }}
         gl={{
           alpha: true,
           antialias: true,
