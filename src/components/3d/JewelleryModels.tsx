@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import type { HeadPose } from "@/components/ARJewelleryOverlay";
+import type { HeadPose } from "@/lib/landmarkMath";
 
 interface ModelProps {
   color?: string;

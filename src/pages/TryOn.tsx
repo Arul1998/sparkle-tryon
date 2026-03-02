@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Menu, X, Trash2, Camera as CameraIcon, Download } from "lucide-react";
+import { ArrowLeft, Menu, X, Trash2, Camera as CameraIcon } from "lucide-react";
 import CameraView, { type TrackingData } from "@/components/CameraView";
 import JewellerySidebar from "@/components/JewellerySidebar";
 import ARJewelleryOverlay from "@/components/ARJewelleryOverlay";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import type { FaceLandmarks } from "@/hooks/useFaceLandmarks";
 import type { HandLandmarks } from "@/hooks/useHandLandmarks";
 import type { JewelleryItem } from "@/data/jewellery";
@@ -18,27 +19,20 @@ const TryOn = () => {
   const [videoDims, setVideoDims] = useState({ w: 0, h: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Resize observer for container dimensions
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
     const ro = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (entry) {
-        setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
-      }
+      if (entry) setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // Responsive: auto-close sidebar on mobile
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      }
+      if (window.innerWidth >= 1024) setSidebarOpen(true);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -47,14 +41,10 @@ const TryOn = () => {
 
   const handleSelectItem = useCallback((item: JewelleryItem) => {
     setActivePieces((prev) => {
-      const exists = prev.find((p) => p.id === item.id);
-      if (exists) return prev;
+      if (prev.find((p) => p.id === item.id)) return prev;
       return [...prev, item];
     });
-    // Close sidebar on mobile after selection
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
+    if (window.innerWidth < 1024) setSidebarOpen(false);
   }, []);
 
   const handleRemoveItem = useCallback((itemId: string) => {
@@ -69,24 +59,19 @@ const TryOn = () => {
     }
   }, []);
 
-  // Capture screenshot
   const handleCapture = useCallback(() => {
     const video = containerRef.current?.querySelector("video");
     if (!video) return;
-
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     ctx.save();
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0);
     ctx.restore();
-
-    // TODO: overlay jewellery on canvas for full capture
     const link = document.createElement("a");
     link.download = `jewel-ar-tryon-${Date.now()}.png`;
     link.href = canvas.toDataURL("image/png");
@@ -113,7 +98,6 @@ const TryOn = () => {
           <span className="text-gold-gradient">Jewel</span> AR
         </h1>
         <div className="flex items-center gap-2">
-          {/* Capture button */}
           <button
             onClick={handleCapture}
             className="glass-dark p-2 rounded-sm border border-border hover:border-gold/30 transition-colors"
@@ -132,68 +116,62 @@ const TryOn = () => {
 
       {/* Main Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Camera + AR overlays */}
         <div className="flex-1 relative" ref={containerRef}>
-          <CameraView onTrackingUpdate={handleTrackingUpdate}>
-            {activePieces.map((item) => (
-              <ARJewelleryOverlay
-                key={item.id}
-                item={item}
-                faceLandmarks={faceLandmarks}
-                handLandmarks={handLandmarks}
-                containerWidth={containerSize.w}
-                containerHeight={containerSize.h}
-                videoWidth={videoDims.w}
-                videoHeight={videoDims.h}
-                mirrored
-              />
-            ))}
+          <ErrorBoundary
+            fallbackTitle="Camera Error"
+            fallbackMessage="Failed to initialize camera or AR tracking. Please check your camera permissions and try again."
+          >
+            <CameraView onTrackingUpdate={handleTrackingUpdate}>
+              <ErrorBoundary
+                fallbackTitle="3D Rendering Error"
+                fallbackMessage="WebGL encountered an issue rendering jewellery. Your browser may not fully support 3D rendering."
+              >
+                {activePieces.map((item) => (
+                  <ARJewelleryOverlay
+                    key={item.id}
+                    item={item}
+                    faceLandmarks={faceLandmarks}
+                    handLandmarks={handLandmarks}
+                    containerWidth={containerSize.w}
+                    containerHeight={containerSize.h}
+                    videoWidth={videoDims.w}
+                    videoHeight={videoDims.h}
+                    mirrored
+                  />
+                ))}
+              </ErrorBoundary>
 
-            {/* Guidance messages */}
-            {(missingFace || missingHand) && (
-              <div className="absolute inset-x-0 bottom-20 sm:bottom-16 flex justify-center z-20 px-4">
-                <div className="glass-dark px-4 py-2.5 rounded-sm border border-gold/20 max-w-sm">
-                  <p className="text-foreground text-xs sm:text-sm font-body text-center">
-                    {missingFace && missingHand
-                      ? "Show your face & hands to try on jewellery"
-                      : missingFace
-                      ? "Position your face in the camera for earrings & necklaces"
-                      : "Show your hand to try on rings & bangles"}
-                  </p>
+              {(missingFace || missingHand) && (
+                <div className="absolute inset-x-0 bottom-20 sm:bottom-16 flex justify-center z-20 px-4">
+                  <div className="glass-dark px-4 py-2.5 rounded-sm border border-gold/20 max-w-sm">
+                    <p className="text-foreground text-xs sm:text-sm font-body text-center">
+                      {missingFace && missingHand
+                        ? "Show your face & hands to try on jewellery"
+                        : missingFace
+                        ? "Position your face in the camera for earrings & necklaces"
+                        : "Show your hand to try on rings & bangles"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </CameraView>
+              )}
+            </CameraView>
+          </ErrorBoundary>
 
-          {/* Active pieces strip */}
           {activePieces.length > 0 && (
             <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 z-20">
               <div className="glass-dark rounded-sm border border-border p-1.5 sm:p-2 flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
-                <span className="text-[10px] sm:text-xs font-body text-muted-foreground shrink-0 px-1.5">
-                  Wearing:
-                </span>
+                <span className="text-[10px] sm:text-xs font-body text-muted-foreground shrink-0 px-1.5">Wearing:</span>
                 {activePieces.map((item) => (
-                  <div
-                    key={item.id}
-                    className="shrink-0 flex items-center gap-1.5 bg-secondary rounded-sm px-1.5 sm:px-2 py-1 group"
-                  >
+                  <div key={item.id} className="shrink-0 flex items-center gap-1.5 bg-secondary rounded-sm px-1.5 sm:px-2 py-1 group">
                     <img src={item.image} alt={item.name} className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-                    <span className="text-[10px] sm:text-xs font-body text-foreground hidden sm:inline max-w-[80px] truncate">
-                      {item.name}
-                    </span>
-                    <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                    >
+                    <span className="text-[10px] sm:text-xs font-body text-foreground hidden sm:inline max-w-[80px] truncate">{item.name}</span>
+                    <button onClick={() => handleRemoveItem(item.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
                 {activePieces.length > 1 && (
-                  <button
-                    onClick={() => setActivePieces([])}
-                    className="text-[10px] sm:text-xs font-body text-gold hover:text-gold-light transition-colors shrink-0 px-1.5"
-                  >
+                  <button onClick={() => setActivePieces([])} className="text-[10px] sm:text-xs font-body text-gold hover:text-gold-light transition-colors shrink-0 px-1.5">
                     Clear
                   </button>
                 )}
@@ -202,14 +180,9 @@ const TryOn = () => {
           )}
         </div>
 
-        {/* Sidebar - responsive overlay on mobile, fixed on desktop */}
         {sidebarOpen && (
           <>
-            {/* Mobile backdrop */}
-            <div
-              className="lg:hidden fixed inset-0 bg-background/50 z-30"
-              onClick={() => setSidebarOpen(false)}
-            />
+            <div className="lg:hidden fixed inset-0 bg-background/50 z-30" onClick={() => setSidebarOpen(false)} />
             <div className="fixed lg:relative right-0 top-0 bottom-0 w-72 sm:w-80 shrink-0 z-40 lg:z-auto shadow-elegant lg:shadow-none">
               <JewellerySidebar onSelectItem={handleSelectItem} />
             </div>
