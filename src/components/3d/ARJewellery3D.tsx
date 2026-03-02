@@ -13,7 +13,7 @@ import {
   AviatorGlasses,
   RoundSpectacles,
 } from "./JewelleryModels";
-import type { HeadPose } from "@/components/ARJewelleryOverlay";
+import type { HeadPose } from "@/lib/landmarkMath";
 import type { JewelleryCategory } from "@/data/jewellery";
 
 interface ARJewellery3DProps {
