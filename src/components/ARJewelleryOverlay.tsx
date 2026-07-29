@@ -27,25 +27,26 @@ const ARJewelleryOverlay = ({
   videoHeight,
   mirrored = true,
 }: ARJewelleryOverlayProps) => {
-  const headPose = useMemo((): HeadPose | null => {
-    if (!faceLandmarks) return null;
-    return estimateHeadPose(faceLandmarks, mirrored);
-  }, [faceLandmarks, mirrored]);
+  const headPose = useMemo(
+    (): HeadPose | null => faceLandmarks ? estimateHeadPose(faceLandmarks, mirrored) : null,
+    [faceLandmarks, mirrored],
+  );
 
   const placement = useMemo(() => {
-    if (item.category === "earrings" || item.category === "necklaces" || item.category === "glasses") {
-      if (!faceLandmarks) return null;
-      return getFacePlacement(item.category, faceLandmarks, containerWidth, containerHeight, videoWidth, videoHeight, mirrored);
+    if (["earrings", "necklaces", "glasses"].includes(item.category)) {
+      return faceLandmarks
+        ? getFacePlacement(item.category, faceLandmarks, containerWidth, containerHeight, videoWidth, videoHeight, mirrored)
+        : null;
     }
-    if (item.category === "rings" || item.category === "bracelets") {
-      if (handLandmarks.length === 0) return null;
-      return getHandPlacement(item.category, handLandmarks[0], containerWidth, containerHeight, videoWidth, videoHeight, mirrored);
+    if (["rings", "bracelets"].includes(item.category)) {
+      return handLandmarks.length
+        ? getHandPlacement(item.category, handLandmarks[0], containerWidth, containerHeight, videoWidth, videoHeight, mirrored)
+        : null;
     }
     return null;
   }, [item.category, faceLandmarks, handLandmarks, containerWidth, containerHeight, videoWidth, videoHeight, mirrored]);
 
   if (!placement) return null;
-
   const isCustom = item.id.startsWith("custom-");
 
   const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => {
@@ -55,6 +56,8 @@ const ARJewelleryOverlay = ({
           key={key}
           src={item.image}
           alt={item.name}
+          data-ar-layer
+          data-ar-rotation={rotation}
           className="absolute pointer-events-none"
           style={{
             left: x,
@@ -64,7 +67,6 @@ const ARJewelleryOverlay = ({
             transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
             objectFit: "contain",
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.35)) brightness(1.08) contrast(1.1) saturate(1.15)",
-            transition: "left 0.04s linear, top 0.04s linear, width 0.06s ease, height 0.06s ease",
           }}
           draggable={false}
         />
@@ -94,17 +96,9 @@ const ARJewelleryOverlay = ({
     );
   }
 
-  if (placement.position) {
-    return renderPiece(
-      placement.position.x,
-      placement.position.y,
-      placement.position.size,
-      placement.rotation,
-      "single"
-    );
-  }
-
-  return null;
+  return placement.position
+    ? renderPiece(placement.position.x, placement.position.y, placement.position.size, placement.rotation, "single")
+    : null;
 };
 
 export default ARJewelleryOverlay;
