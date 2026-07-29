@@ -1,7 +1,10 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "sparkle-tryon",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Browser-based AR jewellery try-on with real-time face and hand tracking.",
+  "author": "Arul",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
