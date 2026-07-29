@@ -7,7 +7,8 @@ import ItemGrid from "@/components/sidebar/ItemGrid";
 import UploadButton from "@/components/sidebar/UploadButton";
 
 interface JewellerySidebarProps {
-  onSelectItem: (item: JewelleryItem) => void;
+  selectedIds: ReadonlySet<string>;
+  onToggleItem: (item: JewelleryItem) => void;
 }
 
 const trackingHint: Record<JewelleryCategory, string> = {
@@ -19,61 +20,44 @@ const trackingHint: Record<JewelleryCategory, string> = {
 };
 
 const guideSteps = [
-  "1. Enable your camera by clicking the button",
-  "2. Select a jewellery piece from the collection",
-  "3. Face the camera (for earrings/necklaces) or show your hand (for rings/bracelets)",
-  "4. The jewellery will appear on you in real-time!",
-  "5. Use the capture button to save a photo",
+  "Enable your camera.",
+  "Select one or more pieces from the collection.",
+  "Face the camera or show your hand for live tracking.",
+  "Tap a selected piece again to remove it.",
+  "Capture a photo with all visible jewellery included.",
 ];
 
-const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
+const JewellerySidebar = ({ selectedIds, onToggleItem }: JewellerySidebarProps) => {
   const [activeCategory, setActiveCategory] = useState<JewelleryCategory>("earrings");
   const [customItems, setCustomItems] = useState<JewelleryItem[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showGuide, setShowGuide] = useState(false);
 
-  const filtered = useMemo(() => {
-    const allItems = [...jewelleryItems, ...customItems];
-    return allItems.filter((item) => item.category === activeCategory);
-  }, [activeCategory, customItems]);
-
-  const handleSelect = (item: JewelleryItem) => {
-    onSelectItem(item);
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(item.id)) {
-        next.delete(item.id);
-      } else {
-        next.add(item.id);
-      }
-      return next;
-    });
-  };
+  const filtered = useMemo(
+    () => [...jewelleryItems, ...customItems].filter((item) => item.category === activeCategory),
+    [activeCategory, customItems],
+  );
 
   const handleCustomUpload = (item: JewelleryItem) => {
-    setCustomItems((prev) => [...prev, item]);
+    setCustomItems((current) => [...current, item]);
+    onToggleItem(item);
   };
 
   return (
     <div className="h-full flex flex-col bg-card">
-      {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div>
           <h3 className="font-display text-lg text-foreground">Collection</h3>
-          <p className="text-muted-foreground text-xs font-body mt-1">
-            Tap a piece to try it on
-          </p>
+          <p className="text-muted-foreground text-xs font-body mt-1">Tap a piece to add or remove it</p>
         </div>
         <button
-          onClick={() => setShowGuide(!showGuide)}
+          onClick={() => setShowGuide((shown) => !shown)}
           className="p-2 rounded-sm hover:bg-secondary transition-colors"
-          title="How to use"
+          aria-label={showGuide ? "Hide instructions" : "Show instructions"}
         >
           <HelpCircle className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
 
-      {/* How-to Guide */}
       <AnimatePresence>
         {showGuide && (
           <motion.div
@@ -84,8 +68,10 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
           >
             <div className="p-3 bg-secondary/50 space-y-1.5">
               <p className="text-xs font-body font-medium text-foreground">How to use AR Try-On</p>
-              {guideSteps.map((step, i) => (
-                <p key={i} className="text-[10px] sm:text-xs font-body text-muted-foreground">{step}</p>
+              {guideSteps.map((step, index) => (
+                <p key={step} className="text-[10px] sm:text-xs font-body text-muted-foreground">
+                  {index + 1}. {step}
+                </p>
               ))}
             </div>
           </motion.div>
@@ -93,21 +79,17 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
       </AnimatePresence>
 
       <CategoryTabs activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
-
-      {/* Tracking hint */}
       <div className="px-3 py-2 border-b border-border bg-secondary/50">
         <p className="text-[10px] sm:text-xs font-body text-muted-foreground text-center">
           {trackingHint[activeCategory]}
         </p>
       </div>
-
       <ItemGrid
         items={filtered}
         activeCategory={activeCategory}
         selectedIds={selectedIds}
-        onSelect={handleSelect}
+        onSelect={onToggleItem}
       />
-
       <UploadButton activeCategory={activeCategory} onUpload={handleCustomUpload} />
     </div>
   );
