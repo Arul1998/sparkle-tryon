@@ -1,4 +1,4 @@
-import { Suspense, useRef, useMemo } from "react";
+import { Suspense, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 import * as THREE from "three";
@@ -38,7 +38,6 @@ const modelMap: Record<string, React.FC<{ headPose?: HeadPose | null }>> = {
   g3: RoundSpectacles,
 };
 
-// Smoothly interpolates head pose to avoid jitter
 const PoseTracker = ({
   headPose,
   category,
@@ -49,30 +48,22 @@ const PoseTracker = ({
   children: React.ReactNode;
 }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const targetRotation = useRef(new THREE.Euler(0, 0, 0));
-  const currentRotation = useRef(new THREE.Euler(0, 0, 0));
+  const targetRotation = useRef(new THREE.Euler());
+  const currentRotation = useRef(new THREE.Euler());
 
   useFrame(() => {
     if (!groupRef.current) return;
-
     if (headPose) {
       const isNecklace = category === "necklaces";
-      const yawScale = isNecklace ? 1.2 : 0.8;
-      const pitchScale = isNecklace ? 0.6 : 0.4;
-      const rollScale = isNecklace ? 0.5 : 0.3;
-
       targetRotation.current.set(
-        headPose.pitch * pitchScale,
-        -headPose.yaw * yawScale,
-        headPose.roll * rollScale
+        headPose.pitch * (isNecklace ? 0.6 : 0.4),
+        -headPose.yaw * (isNecklace ? 1.2 : 0.8),
+        headPose.roll * (isNecklace ? 0.5 : 0.3),
       );
     }
-
-    const lerpFactor = 0.15;
-    currentRotation.current.x += (targetRotation.current.x - currentRotation.current.x) * lerpFactor;
-    currentRotation.current.y += (targetRotation.current.y - currentRotation.current.y) * lerpFactor;
-    currentRotation.current.z += (targetRotation.current.z - currentRotation.current.z) * lerpFactor;
-
+    currentRotation.current.x += (targetRotation.current.x - currentRotation.current.x) * 0.15;
+    currentRotation.current.y += (targetRotation.current.y - currentRotation.current.y) * 0.15;
+    currentRotation.current.z += (targetRotation.current.z - currentRotation.current.z) * 0.15;
     groupRef.current.rotation.copy(currentRotation.current);
   });
 
@@ -81,14 +72,14 @@ const PoseTracker = ({
 
 const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: ARJewellery3DProps) => {
   const ModelComponent = modelMap[modelId];
-
   if (!ModelComponent) return null;
 
   const canvasSize = size * 1.3;
-
   return (
     <div
       className="absolute pointer-events-none"
+      data-ar-layer
+      data-ar-rotation={rotation}
       style={{
         left: x,
         top: y,
@@ -99,16 +90,18 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: AR
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 3], fov: (category === "necklaces" || category === "earrings" || category === "glasses") ? 40 : 35 }}
+        camera={{
+          position: [0, 0, 3],
+          fov: category === "necklaces" || category === "earrings" || category === "glasses" ? 40 : 35,
+        }}
         gl={{
           alpha: true,
           antialias: true,
           premultipliedAlpha: false,
           powerPreference: "low-power",
-          preserveDrawingBuffer: false,
+          preserveDrawingBuffer: true,
         }}
         style={{ background: "transparent" }}
-        frameloop="always"
         dpr={[1, 1.5]}
       >
         <Suspense fallback={null}>
@@ -116,9 +109,7 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation, headPose, category }: AR
           <directionalLight position={[3, 5, 5]} intensity={1.8} />
           <directionalLight position={[-4, 3, -2]} intensity={0.6} color="#ffeedd" />
           <pointLight position={[0, -2, 4]} intensity={0.5} color="#ffd700" />
-
           <Environment preset="studio" environmentIntensity={0.5} />
-
           <PoseTracker headPose={headPose} category={category}>
             <ModelComponent headPose={headPose} />
           </PoseTracker>
