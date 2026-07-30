@@ -24,9 +24,9 @@ const LANDMARK_INDICES = {
   chin: 152,
   leftEar: 234,
   rightEar: 454,
-  // Use ear tragion (234/454) as earlobe anchor — most lateral face points
-  leftEarlobe: 234,
-  rightEarlobe: 454,
+  // Jaw corners near ears — better earlobe approximation
+  leftJawEar: 132,
+  rightJawEar: 361,
   forehead: 10,
   jawLeft: 172,
   jawRight: 397,
@@ -145,8 +145,22 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
 
         const leftEar = face[LANDMARK_INDICES.leftEar];
         const rightEar = face[LANDMARK_INDICES.rightEar];
-        const leftEarlobe = face[LANDMARK_INDICES.leftEarlobe];
-        const rightEarlobe = face[LANDMARK_INDICES.rightEarlobe];
+        const leftJawEar = face[LANDMARK_INDICES.leftJawEar];
+        const rightJawEar = face[LANDMARK_INDICES.rightJawEar];
+
+        // Earlobe = ear tragion x-position with jaw-ear y-position
+        const leftEarlobe: NormalizedLandmark = {
+          x: leftEar.x,
+          y: leftJawEar.y,
+          z: leftEar.z,
+          visibility: 1,
+        };
+        const rightEarlobe: NormalizedLandmark = {
+          x: rightEar.x,
+          y: rightJawEar.y,
+          z: rightEar.z,
+          visibility: 1,
+        };
         const chin = face[LANDMARK_INDICES.chin];
         const noseTip = face[LANDMARK_INDICES.noseTip];
         const forehead = face[LANDMARK_INDICES.forehead];

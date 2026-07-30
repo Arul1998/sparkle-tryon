@@ -88,8 +88,8 @@ function getFacePlacement(
     const size = fwPx * 0.4;
     return {
       type: "dual",
-      left: { x: left.px, y: left.py + size * 0.55, size },
-      right: { x: right.px, y: right.py + size * 0.55, size },
+      left: { x: left.px, y: left.py + size * 0.15, size },
+      right: { x: right.px, y: right.py + size * 0.15, size },
       rotation: landmarks.rotationAngle,
     };
   }
