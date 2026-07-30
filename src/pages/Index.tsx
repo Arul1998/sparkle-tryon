@@ -1,12 +1,21 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import HeroSection from "@/components/HeroSection";
+import FeaturesSection from "@/components/FeaturesSection";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <HeroSection />
+      <FeaturesSection />
+
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-border">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="font-display text-xl text-gold-gradient mb-2">Jewel AR</p>
+          <p className="text-muted-foreground text-xs font-body tracking-wider">
+            Virtual Try-On Experience
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
