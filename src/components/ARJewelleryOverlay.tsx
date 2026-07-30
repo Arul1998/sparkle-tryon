@@ -225,11 +225,10 @@ const ARJewelleryOverlay = ({
   if (!placement) return null;
 
   const isCustom = item.id.startsWith("custom-");
-  const isGlasses = item.category === "glasses";
 
   const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => {
-    // Custom uploads and glasses use 2D image overlay
-    if (isCustom || isGlasses) {
+    // Custom uploads use 2D image overlay
+    if (isCustom) {
       return (
         <img
           key={key}
@@ -240,7 +239,7 @@ const ARJewelleryOverlay = ({
             left: x,
             top: y,
             width: size,
-            height: isGlasses ? size * 0.5 : size * 1.3,
+            height: size * 1.3,
             transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
             objectFit: "contain",
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.35)) brightness(1.08) contrast(1.1) saturate(1.15)",
