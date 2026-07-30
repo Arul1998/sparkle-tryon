@@ -6,40 +6,25 @@ import {
 } from "@mediapipe/tasks-vision";
 
 export interface FaceLandmarks {
-  /** All 478 face mesh landmarks (normalized 0-1 coordinates) */
   all: NormalizedLandmark[];
-  /** Left ear tragion area */
   leftEar: NormalizedLandmark;
-  /** Right ear tragion area */
   rightEar: NormalizedLandmark;
-  /** Chin bottom */
   chin: NormalizedLandmark;
-  /** Neck center (estimated below chin) */
   neckCenter: NormalizedLandmark;
-  /** Nose tip */
   noseTip: NormalizedLandmark;
-  /** Forehead center */
   forehead: NormalizedLandmark;
-  /** Left wrist (not tracked by face mesh) */
   faceWidth: number;
-  /** Face rotation angle in degrees */
   rotationAngle: number;
 }
 
-// Key MediaPipe Face Mesh landmark indices
-// Reference: https://github.com/google/mediapipe/blob/master/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
 const LANDMARK_INDICES = {
   noseTip: 1,
   chin: 152,
-  leftEar: 234,    // left ear tragion area
-  rightEar: 454,   // right ear tragion area
+  leftEar: 234,
+  rightEar: 454,
   forehead: 10,
-  leftCheek: 323,
-  rightCheek: 93,
-  // For earring placement — outer ear/earlobe area
   leftEarBottom: 234,
   rightEarBottom: 454,
-  // Jaw line points for necklace
   jawLeft: 172,
   jawRight: 397,
 };
@@ -52,17 +37,17 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
   const animFrameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(-1);
 
-  // Initialize FaceLandmarker
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
       try {
         setIsLoading(true);
-        const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-        );
+        setError(null);
 
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm"
+        );
         if (cancelled) return;
 
         const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
@@ -84,12 +69,39 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
 
         landmarkerRef.current = faceLandmarker;
         setIsLoading(false);
-        setError(null);
       } catch (err) {
         if (!cancelled) {
           console.error("FaceLandmarker init error:", err);
-          setError("Failed to load face detection model");
-          setIsLoading(false);
+          // Retry with CPU delegate
+          try {
+            const vision = await FilesetResolver.forVisionTasks(
+              "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm"
+            );
+            if (cancelled) return;
+            const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+              baseOptions: {
+                modelAssetPath:
+                  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                delegate: "CPU",
+              },
+              runningMode: "VIDEO",
+              numFaces: 1,
+              outputFaceBlendshapes: false,
+              outputFacialTransformationMatrixes: false,
+            });
+            if (cancelled) {
+              faceLandmarker.close();
+              return;
+            }
+            landmarkerRef.current = faceLandmarker;
+            setIsLoading(false);
+          } catch (retryErr) {
+            if (!cancelled) {
+              console.error("FaceLandmarker CPU fallback error:", retryErr);
+              setError("Face detection unavailable. Check internet connection.");
+              setIsLoading(false);
+            }
+          }
         }
       }
     }
@@ -102,10 +114,10 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
         landmarkerRef.current.close();
         landmarkerRef.current = null;
       }
+      cancelAnimationFrame(animFrameRef.current);
     };
   }, []);
 
-  // Detection loop
   const detect = useCallback(() => {
     const video = videoRef.current;
     const landmarker = landmarkerRef.current;
@@ -116,7 +128,7 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
     }
 
     const now = performance.now();
-    if (now === lastTimeRef.current) {
+    if (now <= lastTimeRef.current) {
       animFrameRef.current = requestAnimationFrame(detect);
       return;
     }
@@ -134,7 +146,6 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
         const noseTip = face[LANDMARK_INDICES.noseTip];
         const forehead = face[LANDMARK_INDICES.forehead];
 
-        // Estimate neck center below chin
         const jawLeft = face[LANDMARK_INDICES.jawLeft];
         const jawRight = face[LANDMARK_INDICES.jawRight];
         const neckCenter: NormalizedLandmark = {
@@ -144,12 +155,10 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
           visibility: 1,
         };
 
-        // Face width for scaling
         const faceWidth = Math.abs(
           face[LANDMARK_INDICES.leftEar].x - face[LANDMARK_INDICES.rightEar].x
         );
 
-        // Face rotation (yaw estimate)
         const leftDist = Math.abs(noseTip.x - face[LANDMARK_INDICES.leftEar].x);
         const rightDist = Math.abs(noseTip.x - face[LANDMARK_INDICES.rightEar].x);
         const rotationAngle = ((rightDist - leftDist) / (rightDist + leftDist)) * 30;
@@ -175,7 +184,6 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
     animFrameRef.current = requestAnimationFrame(detect);
   }, [videoRef]);
 
-  // Start/stop detection loop when video is playing
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -194,7 +202,6 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
     video.addEventListener("pause", stopDetection);
     video.addEventListener("ended", stopDetection);
 
-    // Start if already playing
     if (!video.paused && landmarkerRef.current) {
       startDetection();
     }

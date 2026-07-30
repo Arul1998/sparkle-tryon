@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
-import { Upload, Plus, Check } from "lucide-react";
+import { Upload, Plus, Check, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { jewelleryItems, categories, type JewelleryCategory, type JewelleryItem } from "@/data/jewellery";
-import JewelleryPreview3D from "@/components/3d/JewelleryPreview3D";
 
 interface JewellerySidebarProps {
   onSelectItem: (item: JewelleryItem) => void;
@@ -12,6 +11,7 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
   const [activeCategory, setActiveCategory] = useState<JewelleryCategory>("earrings");
   const [customItems, setCustomItems] = useState<JewelleryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showGuide, setShowGuide] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const allItems = [...jewelleryItems, ...customItems];
@@ -49,23 +49,58 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
     e.target.value = "";
   };
 
-  // Tracking hint per category
   const trackingHint: Record<JewelleryCategory, string> = {
-    earrings: "Tracks your ears via face detection",
-    necklaces: "Tracks your neck via face detection",
-    rings: "Tracks your hand — show your hand to camera",
-    bracelets: "Tracks your wrist — show your hand to camera",
+    earrings: "👂 Face your camera — tracks ears automatically",
+    necklaces: "💎 Face your camera — tracks your neckline",
+    rings: "💍 Show your hand palm-up to the camera",
+    bracelets: "⌚ Show your wrist to the camera",
   };
+
+  const guideSteps = [
+    "1. Enable your camera by clicking the button",
+    "2. Select a jewellery piece from the collection",
+    "3. Face the camera (for earrings/necklaces) or show your hand (for rings/bracelets)",
+    "4. The jewellery will appear on you in real-time!",
+    "5. Use the capture button to save a photo",
+  ];
 
   return (
     <div className="h-full flex flex-col bg-card">
       {/* Header */}
-      <div className="p-4 border-b border-border">
-        <h3 className="font-display text-lg text-foreground">Collection</h3>
-        <p className="text-muted-foreground text-xs font-body mt-1">
-          Tap a piece to try it on
-        </p>
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <div>
+          <h3 className="font-display text-lg text-foreground">Collection</h3>
+          <p className="text-muted-foreground text-xs font-body mt-1">
+            Tap a piece to try it on
+          </p>
+        </div>
+        <button
+          onClick={() => setShowGuide(!showGuide)}
+          className="p-2 rounded-sm hover:bg-secondary transition-colors"
+          title="How to use"
+        >
+          <HelpCircle className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
+
+      {/* How-to Guide */}
+      <AnimatePresence>
+        {showGuide && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-b border-border"
+          >
+            <div className="p-3 bg-secondary/50 space-y-1.5">
+              <p className="text-xs font-body font-medium text-foreground">How to use AR Try-On</p>
+              {guideSteps.map((step, i) => (
+                <p key={i} className="text-[10px] sm:text-xs font-body text-muted-foreground">{step}</p>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Categories */}
       <div className="flex border-b border-border">
@@ -92,7 +127,7 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
         </p>
       </div>
 
-      {/* Items Grid */}
+      {/* Items Grid — uses static images instead of 3D canvases */}
       <div className="flex-1 overflow-y-auto p-3">
         <AnimatePresence mode="wait">
           <motion.div
@@ -105,8 +140,9 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
             {filtered.map((item) => {
               const isSelected = selectedIds.has(item.id);
               return (
-                <button
+                <motion.button
                   key={item.id}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleSelect(item)}
                   className={`group relative bg-secondary rounded-sm overflow-hidden border transition-all ${
                     isSelected
@@ -114,18 +150,13 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
                       : "border-border hover:border-gold/40"
                   }`}
                 >
-                  <div className="aspect-square">
-                    {item.id.startsWith("custom-") ? (
-                      <div className="w-full h-full p-2">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <JewelleryPreview3D modelId={item.id} className="w-full h-full" />
-                    )}
+                  <div className="aspect-square p-3 flex items-center justify-center bg-secondary">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="p-1.5 sm:p-2 text-left">
                     <p className="text-foreground text-[10px] sm:text-xs font-body truncate">{item.name}</p>
@@ -140,7 +171,7 @@ const JewellerySidebar = ({ onSelectItem }: JewellerySidebarProps) => {
                       <Plus className="w-5 h-5 text-gold" />
                     </div>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </motion.div>
