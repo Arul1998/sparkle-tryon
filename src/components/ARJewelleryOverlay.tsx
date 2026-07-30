@@ -69,13 +69,12 @@ function landmarkToPixel(
 }
 
 function getFacePlacement(
-  category: "earrings" | "necklaces",
+  category: "earrings" | "necklaces" | "glasses",
   landmarks: FaceLandmarks,
   cw: number, ch: number, vw: number, vh: number,
   mirrored: boolean
 ): Placement | null {
   const ltp = (nx: number, ny: number) => landmarkToPixel(nx, ny, cw, ch, vw, vh, mirrored);
-  const fw = landmarks.faceWidth; // normalized
 
   // Compute face width in pixels using object-cover mapping
   const lEar = ltp(landmarks.leftEar.x, landmarks.leftEar.y);
@@ -87,11 +86,8 @@ function getFacePlacement(
     const right = ltp(landmarks.rightEarlobe.x, landmarks.rightEarlobe.y);
     const size = fwPx * 0.4;
 
-    // Determine ear visibility based on head rotation
-    // rotationAngle > 0 means face turned right (left ear more visible)
-    // rotationAngle < 0 means face turned left (right ear more visible)
     const rot = landmarks.rotationAngle;
-    const threshold = 5; // degrees — aggressively hide far ear
+    const threshold = 5;
     const showLeft = rot > -threshold;
     const showRight = rot < threshold;
 
@@ -110,6 +106,31 @@ function getFacePlacement(
       type: "single",
       position: { x: neck.px, y: neck.py + size * 0.05, size },
       rotation: landmarks.rotationAngle * 0.4,
+    };
+  }
+
+  if (category === "glasses") {
+    // Position glasses on the nose bridge between the eyes
+    const all = landmarks.all;
+    if (!all || all.length < 400) return null;
+
+    // Nose bridge (landmark 6), left eye outer (33), right eye outer (263)
+    const noseBridge = all[6];
+    const leftEyeOuter = all[33];
+    const rightEyeOuter = all[263];
+
+    const center = ltp(noseBridge.x, noseBridge.y);
+    const leftEye = ltp(leftEyeOuter.x, leftEyeOuter.y);
+    const rightEye = ltp(rightEyeOuter.x, rightEyeOuter.y);
+
+    // Size based on distance between outer eye corners
+    const eyeSpan = Math.abs(leftEye.px - rightEye.px);
+    const size = eyeSpan * 1.6;
+
+    return {
+      type: "single",
+      position: { x: center.px, y: center.py, size },
+      rotation: landmarks.rotationAngle * 0.6,
     };
   }
 
@@ -190,7 +211,7 @@ const ARJewelleryOverlay = ({
   const placement = useMemo(() => {
     const vw = videoWidth;
     const vh = videoHeight;
-    if (item.category === "earrings" || item.category === "necklaces") {
+    if (item.category === "earrings" || item.category === "necklaces" || item.category === "glasses") {
       if (!faceLandmarks) return null;
       return getFacePlacement(item.category, faceLandmarks, containerWidth, containerHeight, vw, vh, mirrored);
     }
@@ -204,10 +225,11 @@ const ARJewelleryOverlay = ({
   if (!placement) return null;
 
   const isCustom = item.id.startsWith("custom-");
+  const isGlasses = item.category === "glasses";
 
   const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => {
-    // Custom uploads use 2D image overlay
-    if (isCustom) {
+    // Custom uploads and glasses use 2D image overlay
+    if (isCustom || isGlasses) {
       return (
         <img
           key={key}
@@ -218,7 +240,7 @@ const ARJewelleryOverlay = ({
             left: x,
             top: y,
             width: size,
-            height: size * 1.3,
+            height: isGlasses ? size * 0.5 : size * 1.3,
             transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
             objectFit: "contain",
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.35)) brightness(1.08) contrast(1.1) saturate(1.15)",
