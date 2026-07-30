@@ -1,106 +1,139 @@
 import { useMemo } from "react";
 import type { FaceLandmarks } from "@/hooks/useFaceLandmarks";
+import type { HandLandmarks } from "@/hooks/useHandLandmarks";
 import type { JewelleryItem, JewelleryCategory } from "@/data/jewellery";
+
+interface Placement {
+  type: "single" | "dual";
+  left?: { x: number; y: number; size: number };
+  right?: { x: number; y: number; size: number };
+  position?: { x: number; y: number; size: number };
+  rotation: number;
+}
 
 interface ARJewelleryOverlayProps {
   item: JewelleryItem;
-  landmarks: FaceLandmarks;
+  faceLandmarks: FaceLandmarks | null;
+  handLandmarks: HandLandmarks[];
   containerWidth: number;
   containerHeight: number;
   mirrored?: boolean;
 }
 
-/**
- * Compute position & scale for each jewellery category based on face landmarks.
- * All landmark coordinates are normalized (0–1), so we multiply by container dimensions.
- */
-function getPlacement(
-  category: JewelleryCategory,
+function getFacePlacement(
+  category: "earrings" | "necklaces",
   landmarks: FaceLandmarks,
-  containerWidth: number,
-  containerHeight: number,
+  cw: number,
+  ch: number,
   mirrored: boolean
-) {
-  const mirrorX = (x: number) => (mirrored ? 1 - x : x);
+): Placement | null {
+  const mx = (x: number) => (mirrored ? 1 - x : x);
+  const fw = landmarks.faceWidth * cw;
 
-  // Base size relative to face width
-  const facePixelWidth = landmarks.faceWidth * containerWidth;
-
-  switch (category) {
-    case "earrings": {
-      // Position at both ears
-      const leftX = mirrorX(landmarks.leftEar.x) * containerWidth;
-      const leftY = landmarks.leftEar.y * containerHeight;
-      const rightX = mirrorX(landmarks.rightEar.x) * containerWidth;
-      const rightY = landmarks.rightEar.y * containerHeight;
-      const size = facePixelWidth * 0.3;
-
-      return {
-        type: "dual" as const,
-        left: { x: leftX, y: leftY + size * 0.15, size },
-        right: { x: rightX, y: rightY + size * 0.15, size },
-        rotation: landmarks.rotationAngle,
-      };
-    }
-    case "necklaces": {
-      const x = mirrorX(landmarks.neckCenter.x) * containerWidth;
-      const y = landmarks.neckCenter.y * containerHeight;
-      const size = facePixelWidth * 1.2;
-
-      return {
-        type: "single" as const,
-        position: { x, y: y + size * 0.1, size },
-        rotation: landmarks.rotationAngle * 0.5,
-      };
-    }
-    case "rings": {
-      // Show ring near chin area as a preview (no hand tracking)
-      const x = mirrorX(landmarks.chin.x) * containerWidth;
-      const y = landmarks.chin.y * containerHeight + facePixelWidth * 0.8;
-      const size = facePixelWidth * 0.25;
-
-      return {
-        type: "single" as const,
-        position: { x, y, size },
-        rotation: 0,
-      };
-    }
-    case "bracelets": {
-      // Show bracelet below face area
-      const x = mirrorX(landmarks.chin.x) * containerWidth;
-      const y = landmarks.chin.y * containerHeight + facePixelWidth * 1;
-      const size = facePixelWidth * 0.4;
-
-      return {
-        type: "single" as const,
-        position: { x, y, size },
-        rotation: 0,
-      };
-    }
+  if (category === "earrings") {
+    const lx = mx(landmarks.leftEar.x) * cw;
+    const ly = landmarks.leftEar.y * ch;
+    const rx = mx(landmarks.rightEar.x) * cw;
+    const ry = landmarks.rightEar.y * ch;
+    const size = fw * 0.32;
+    return {
+      type: "dual",
+      left: { x: lx, y: ly + size * 0.2, size },
+      right: { x: rx, y: ry + size * 0.2, size },
+      rotation: landmarks.rotationAngle,
+    };
   }
+
+  if (category === "necklaces") {
+    const x = mx(landmarks.neckCenter.x) * cw;
+    const y = landmarks.neckCenter.y * ch;
+    const size = fw * 1.3;
+    return {
+      type: "single",
+      position: { x, y: y + size * 0.05, size },
+      rotation: landmarks.rotationAngle * 0.4,
+    };
+  }
+
+  return null;
+}
+
+function getHandPlacement(
+  category: "rings" | "bracelets",
+  hand: HandLandmarks,
+  cw: number,
+  ch: number,
+  mirrored: boolean
+): Placement | null {
+  const mx = (x: number) => (mirrored ? 1 - x : x);
+  const hw = hand.handWidth * cw;
+
+  if (category === "rings") {
+    // Position between ring finger base and mid joint
+    const base = hand.ringFingerBase;
+    const mid = hand.ringFingerMid;
+    const x = mx((base.x + mid.x) / 2) * cw;
+    const y = ((base.y + mid.y) / 2) * ch;
+    const size = hw * 0.45;
+
+    // Calculate finger angle
+    const dx = mid.x - base.x;
+    const dy = mid.y - base.y;
+    const angle = Math.atan2(dy, mirrored ? -dx : dx) * (180 / Math.PI);
+
+    return {
+      type: "single",
+      position: { x, y, size },
+      rotation: angle,
+    };
+  }
+
+  if (category === "bracelets") {
+    const x = mx(hand.wrist.x) * cw;
+    const y = hand.wrist.y * ch;
+    const size = hw * 1.4;
+
+    // Wrist angle from wrist to middle finger base
+    const dx = hand.middleFingerBase.x - hand.wrist.x;
+    const dy = hand.middleFingerBase.y - hand.wrist.y;
+    const angle = Math.atan2(dy, mirrored ? -dx : dx) * (180 / Math.PI) - 90;
+
+    return {
+      type: "single",
+      position: { x, y, size },
+      rotation: angle,
+    };
+  }
+
+  return null;
 }
 
 const ARJewelleryOverlay = ({
   item,
-  landmarks,
+  faceLandmarks,
+  handLandmarks,
   containerWidth,
   containerHeight,
   mirrored = true,
 }: ARJewelleryOverlayProps) => {
-  const placement = useMemo(
-    () => getPlacement(item.category, landmarks, containerWidth, containerHeight, mirrored),
-    [item.category, landmarks, containerWidth, containerHeight, mirrored]
-  );
+  const placement = useMemo(() => {
+    if (item.category === "earrings" || item.category === "necklaces") {
+      if (!faceLandmarks) return null;
+      return getFacePlacement(item.category, faceLandmarks, containerWidth, containerHeight, mirrored);
+    }
+
+    if (item.category === "rings" || item.category === "bracelets") {
+      if (handLandmarks.length === 0) return null;
+      // Use first detected hand
+      return getHandPlacement(item.category, handLandmarks[0], containerWidth, containerHeight, mirrored);
+    }
+
+    return null;
+  }, [item.category, faceLandmarks, handLandmarks, containerWidth, containerHeight, mirrored]);
 
   if (!placement) return null;
 
-  const renderPiece = (
-    x: number,
-    y: number,
-    size: number,
-    rotation: number,
-    key: string
-  ) => (
+  const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => (
     <img
       key={key}
       src={item.image}
@@ -113,41 +146,33 @@ const ARJewelleryOverlay = ({
         height: size,
         transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
         objectFit: "contain",
-        filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4))",
-        transition: "left 0.05s linear, top 0.05s linear, width 0.1s ease, height 0.1s ease",
+        filter: "drop-shadow(0 2px 10px rgba(0,0,0,0.5))",
+        transition: "left 0.04s linear, top 0.04s linear, width 0.08s ease, height 0.08s ease",
       }}
       draggable={false}
     />
   );
 
-  if (placement.type === "dual") {
+  if (placement.type === "dual" && placement.left && placement.right) {
     return (
       <>
-        {renderPiece(
-          placement.left.x,
-          placement.left.y,
-          placement.left.size,
-          -placement.rotation,
-          "left"
-        )}
-        {renderPiece(
-          placement.right.x,
-          placement.right.y,
-          placement.right.size,
-          -placement.rotation,
-          "right"
-        )}
+        {renderPiece(placement.left.x, placement.left.y, placement.left.size, -placement.rotation, "left")}
+        {renderPiece(placement.right.x, placement.right.y, placement.right.size, -placement.rotation, "right")}
       </>
     );
   }
 
-  return renderPiece(
-    placement.position.x,
-    placement.position.y,
-    placement.position.size,
-    placement.rotation,
-    "single"
-  );
+  if (placement.position) {
+    return renderPiece(
+      placement.position.x,
+      placement.position.y,
+      placement.position.size,
+      placement.rotation,
+      "single"
+    );
+  }
+
+  return null;
 };
 
 export default ARJewelleryOverlay;
