@@ -12,6 +12,12 @@ interface Placement {
   rotation: number;
 }
 
+export interface HeadPose {
+  yaw: number;   // left-right rotation in radians
+  pitch: number; // up-down rotation in radians
+  roll: number;  // tilt rotation in radians
+}
+
 interface ARJewelleryOverlayProps {
   item: JewelleryItem;
   faceLandmarks: FaceLandmarks | null;
@@ -102,6 +108,34 @@ const ARJewelleryOverlay = ({
   containerHeight,
   mirrored = true,
 }: ARJewelleryOverlayProps) => {
+  // Estimate head pose from face landmarks
+  const headPose = useMemo((): HeadPose | null => {
+    if (!faceLandmarks) return null;
+    const all = faceLandmarks.all;
+    if (!all || all.length < 400) return null;
+
+    // Yaw: nose tip vs face center (ears midpoint)
+    const noseTip = all[1];
+    const leftEar = all[234];
+    const rightEar = all[454];
+    const faceCenterX = (leftEar.x + rightEar.x) / 2;
+    const faceWidth = Math.abs(leftEar.x - rightEar.x);
+    const yaw = faceWidth > 0 ? ((noseTip.x - faceCenterX) / faceWidth) * 1.8 : 0;
+
+    // Pitch: forehead vs chin vertical relationship with depth
+    const forehead = all[10];
+    const chin = all[152];
+    const faceHeight = Math.abs(forehead.y - chin.y);
+    const noseToForehead = noseTip.y - forehead.y;
+    const noseToChin = chin.y - noseTip.y;
+    const pitch = faceHeight > 0 ? ((noseToChin - noseToForehead) / faceHeight) * 0.8 : 0;
+
+    // Roll: ear-to-ear tilt
+    const roll = Math.atan2(rightEar.y - leftEar.y, rightEar.x - leftEar.x);
+
+    return { yaw: mirrored ? -yaw : yaw, pitch, roll: mirrored ? -roll : roll };
+  }, [faceLandmarks, mirrored]);
+
   const placement = useMemo(() => {
     if (item.category === "earrings" || item.category === "necklaces") {
       if (!faceLandmarks) return null;
@@ -149,6 +183,8 @@ const ARJewelleryOverlay = ({
         y={y}
         size={size}
         rotation={rotation}
+        headPose={headPose}
+        category={item.category}
       />
     );
   };
