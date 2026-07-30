@@ -110,27 +110,34 @@ function getFacePlacement(
   }
 
   if (category === "glasses") {
-    // Position glasses on the nose bridge between the eyes
     const all = landmarks.all;
     if (!all || all.length < 400) return null;
 
-    // Nose bridge (landmark 6), left eye outer (33), right eye outer (263)
-    const noseBridge = all[6];
+    // Use eye inner corners (133, 362) and outer corners (33, 263) for precise placement
     const leftEyeOuter = all[33];
     const rightEyeOuter = all[263];
+    const leftEyeInner = all[133];
+    const rightEyeInner = all[362];
+    const noseBridge = all[6];
 
-    const center = ltp(noseBridge.x, noseBridge.y);
-    const leftEye = ltp(leftEyeOuter.x, leftEyeOuter.y);
-    const rightEye = ltp(rightEyeOuter.x, rightEyeOuter.y);
+    const lo = ltp(leftEyeOuter.x, leftEyeOuter.y);
+    const ro = ltp(rightEyeOuter.x, rightEyeOuter.y);
+    const li = ltp(leftEyeInner.x, leftEyeInner.y);
+    const ri = ltp(rightEyeInner.x, rightEyeInner.y);
+    const nb = ltp(noseBridge.x, noseBridge.y);
 
-    // Size based on distance between outer eye corners
-    const eyeSpan = Math.abs(leftEye.px - rightEye.px);
-    const size = eyeSpan * 1.6;
+    // Center between both eyes, shifted slightly down to rest on nose
+    const cx = (lo.px + ro.px) / 2;
+    const cy = nb.py + fwPx * 0.02; // sit just below nose bridge
+
+    // Width spans from outer eye to outer eye, with padding for frames
+    const eyeSpan = Math.abs(lo.px - ro.px);
+    const size = eyeSpan * 1.45;
 
     return {
       type: "single",
-      position: { x: center.px, y: center.py, size },
-      rotation: landmarks.rotationAngle * 0.6,
+      position: { x: cx, y: cy, size },
+      rotation: landmarks.rotationAngle * 0.5,
     };
   }
 
