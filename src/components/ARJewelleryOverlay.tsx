@@ -38,18 +38,17 @@ function getFacePlacement(
   const fw = landmarks.faceWidth * cw;
 
   if (category === "earrings") {
-    // Use earlobe landmarks (177/401) for accurate earring placement
+    // Use ear tragion landmarks (234/454) — the most lateral points on each ear
     const lx = mx(landmarks.leftEarlobe.x) * cw;
     const ly = landmarks.leftEarlobe.y * ch;
     const rx = mx(landmarks.rightEarlobe.x) * cw;
     const ry = landmarks.rightEarlobe.y * ch;
-    // Earring size proportional to face width
-    const size = fw * 0.38;
+    const size = fw * 0.4;
     return {
       type: "dual",
-      // Earrings dangle slightly below the earlobe point
-      left: { x: lx, y: ly + size * 0.35, size },
-      right: { x: rx, y: ry + size * 0.35, size },
+      // Offset down from tragion so earring dangles below the earlobe
+      left: { x: lx, y: ly + size * 0.55, size },
+      right: { x: rx, y: ry + size * 0.55, size },
       rotation: landmarks.rotationAngle,
     };
   }
