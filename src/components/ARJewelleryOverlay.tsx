@@ -38,15 +38,18 @@ function getFacePlacement(
   const fw = landmarks.faceWidth * cw;
 
   if (category === "earrings") {
-    const lx = mx(landmarks.leftEar.x) * cw;
-    const ly = landmarks.leftEar.y * ch;
-    const rx = mx(landmarks.rightEar.x) * cw;
-    const ry = landmarks.rightEar.y * ch;
-    const size = fw * 0.32;
+    // Use earlobe landmarks (177/401) for accurate earring placement
+    const lx = mx(landmarks.leftEarlobe.x) * cw;
+    const ly = landmarks.leftEarlobe.y * ch;
+    const rx = mx(landmarks.rightEarlobe.x) * cw;
+    const ry = landmarks.rightEarlobe.y * ch;
+    // Earring size proportional to face width
+    const size = fw * 0.38;
     return {
       type: "dual",
-      left: { x: lx, y: ly + size * 0.2, size },
-      right: { x: rx, y: ry + size * 0.2, size },
+      // Earrings dangle slightly below the earlobe point
+      left: { x: lx, y: ly + size * 0.35, size },
+      right: { x: rx, y: ry + size * 0.35, size },
       rotation: landmarks.rotationAngle,
     };
   }
@@ -150,10 +153,12 @@ const ARJewelleryOverlay = ({
 
   if (!placement) return null;
 
+  const isEarring = item.category === "earrings";
   const isCustom = item.id.startsWith("custom-");
 
   const renderPiece = (x: number, y: number, size: number, rotation: number, key: string) => {
-    if (isCustom) {
+    // Earrings always use 2D image overlay (like Snapchat) — lightweight & reliable
+    if (isCustom || isEarring) {
       return (
         <img
           key={key}
@@ -164,11 +169,11 @@ const ARJewelleryOverlay = ({
             left: x,
             top: y,
             width: size,
-            height: size,
+            height: size * 1.3, // earrings are taller than wide
             transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
             objectFit: "contain",
-            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4)) brightness(1.05) contrast(1.1) saturate(1.2)",
-            transition: "left 0.05s linear, top 0.05s linear, width 0.08s ease, height 0.08s ease",
+            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.35)) brightness(1.08) contrast(1.1) saturate(1.15)",
+            transition: "left 0.04s linear, top 0.04s linear, width 0.06s ease, height 0.06s ease",
           }}
           draggable={false}
         />
