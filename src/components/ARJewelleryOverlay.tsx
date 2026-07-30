@@ -86,10 +86,19 @@ function getFacePlacement(
     const left = ltp(landmarks.leftEarlobe.x, landmarks.leftEarlobe.y);
     const right = ltp(landmarks.rightEarlobe.x, landmarks.rightEarlobe.y);
     const size = fwPx * 0.4;
+
+    // Determine ear visibility based on head rotation
+    // rotationAngle > 0 means face turned right (left ear more visible)
+    // rotationAngle < 0 means face turned left (right ear more visible)
+    const rot = landmarks.rotationAngle;
+    const threshold = 12; // degrees — hide far ear beyond this
+    const showLeft = rot > -threshold;
+    const showRight = rot < threshold;
+
     return {
       type: "dual",
-      left: { x: left.px, y: left.py + size * 0.15, size },
-      right: { x: right.px, y: right.py + size * 0.15, size },
+      left: showLeft ? { x: left.px, y: left.py + size * 0.15, size } : undefined,
+      right: showRight ? { x: right.px, y: right.py + size * 0.15, size } : undefined,
       rotation: landmarks.rotationAngle,
     };
   }
@@ -235,11 +244,11 @@ const ARJewelleryOverlay = ({
     );
   };
 
-  if (placement.type === "dual" && placement.left && placement.right) {
+  if (placement.type === "dual") {
     return (
       <>
-        {renderPiece(placement.left.x, placement.left.y, placement.left.size, -placement.rotation, "left")}
-        {renderPiece(placement.right.x, placement.right.y, placement.right.size, -placement.rotation, "right")}
+        {placement.left && renderPiece(placement.left.x, placement.left.y, placement.left.size, -placement.rotation, "left")}
+        {placement.right && renderPiece(placement.right.x, placement.right.y, placement.right.size, -placement.rotation, "right")}
       </>
     );
   }
