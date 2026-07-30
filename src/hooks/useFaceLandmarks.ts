@@ -9,6 +9,8 @@ export interface FaceLandmarks {
   all: NormalizedLandmark[];
   leftEar: NormalizedLandmark;
   rightEar: NormalizedLandmark;
+  leftEarlobe: NormalizedLandmark;
+  rightEarlobe: NormalizedLandmark;
   chin: NormalizedLandmark;
   neckCenter: NormalizedLandmark;
   noseTip: NormalizedLandmark;
@@ -22,9 +24,10 @@ const LANDMARK_INDICES = {
   chin: 152,
   leftEar: 234,
   rightEar: 454,
+  // Earlobe / tragion bottom — where earrings hang
+  leftEarlobe: 177,
+  rightEarlobe: 401,
   forehead: 10,
-  leftEarBottom: 234,
-  rightEarBottom: 454,
   jawLeft: 172,
   jawRight: 397,
 };
@@ -140,8 +143,10 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
       if (result.faceLandmarks && result.faceLandmarks.length > 0) {
         const face = result.faceLandmarks[0];
 
-        const leftEar = face[LANDMARK_INDICES.leftEarBottom];
-        const rightEar = face[LANDMARK_INDICES.rightEarBottom];
+        const leftEar = face[LANDMARK_INDICES.leftEar];
+        const rightEar = face[LANDMARK_INDICES.rightEar];
+        const leftEarlobe = face[LANDMARK_INDICES.leftEarlobe];
+        const rightEarlobe = face[LANDMARK_INDICES.rightEarlobe];
         const chin = face[LANDMARK_INDICES.chin];
         const noseTip = face[LANDMARK_INDICES.noseTip];
         const forehead = face[LANDMARK_INDICES.forehead];
@@ -155,18 +160,18 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
           visibility: 1,
         };
 
-        const faceWidth = Math.abs(
-          face[LANDMARK_INDICES.leftEar].x - face[LANDMARK_INDICES.rightEar].x
-        );
+        const faceWidth = Math.abs(leftEar.x - rightEar.x);
 
-        const leftDist = Math.abs(noseTip.x - face[LANDMARK_INDICES.leftEar].x);
-        const rightDist = Math.abs(noseTip.x - face[LANDMARK_INDICES.rightEar].x);
+        const leftDist = Math.abs(noseTip.x - leftEar.x);
+        const rightDist = Math.abs(noseTip.x - rightEar.x);
         const rotationAngle = ((rightDist - leftDist) / (rightDist + leftDist)) * 30;
 
         setLandmarks({
           all: face,
           leftEar,
           rightEar,
+          leftEarlobe,
+          rightEarlobe,
           chin,
           neckCenter,
           noseTip,
