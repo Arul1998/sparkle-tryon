@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment, ContactShadows } from "@react-three/drei";
+import { Environment, ContactShadows, OrbitControls } from "@react-three/drei";
 import {
   DiamondStudEarring,
   DropEarring,
@@ -51,6 +51,14 @@ const JewelleryPreview3D = ({ modelId, className = "" }: JewelleryPreview3DProps
             scale={3}
             blur={2}
             far={3}
+          />
+          <OrbitControls
+            enablePan={false}
+            enableZoom={true}
+            minDistance={1.5}
+            maxDistance={5}
+            autoRotate
+            autoRotateSpeed={2}
           />
         </Suspense>
       </Canvas>
