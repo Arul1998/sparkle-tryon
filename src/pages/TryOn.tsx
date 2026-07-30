@@ -93,7 +93,7 @@ const TryOn = () => {
     link.click();
   }, []);
 
-  const needsFace = activePieces.some((p) => p.category === "earrings" || p.category === "necklaces");
+  const needsFace = activePieces.some((p) => p.category === "earrings" || p.category === "necklaces" || p.category === "glasses");
   const needsHand = activePieces.some((p) => p.category === "rings" || p.category === "bracelets");
   const missingFace = needsFace && !faceLandmarks;
   const missingHand = needsHand && handLandmarks.length === 0;
