@@ -24,42 +24,82 @@ interface ARJewelleryOverlayProps {
   handLandmarks: HandLandmarks[];
   containerWidth: number;
   containerHeight: number;
+  videoWidth: number;
+  videoHeight: number;
   mirrored?: boolean;
+}
+
+/**
+ * Convert normalized landmark coords (0-1 relative to video frame)
+ * to pixel coords in the container, accounting for CSS object-cover.
+ */
+function landmarkToPixel(
+  nx: number,
+  ny: number,
+  cw: number,
+  ch: number,
+  vw: number,
+  vh: number,
+  mirrored: boolean
+): { px: number; py: number } {
+  if (vw === 0 || vh === 0) return { px: nx * cw, py: ny * ch };
+
+  const containerAspect = cw / ch;
+  const videoAspect = vw / vh;
+
+  let scale: number;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (videoAspect > containerAspect) {
+    // Video is wider — cropped on sides
+    scale = ch / vh;
+    offsetX = (vw * scale - cw) / 2;
+  } else {
+    // Video is taller — cropped on top/bottom
+    scale = cw / vw;
+    offsetY = (vh * scale - ch) / 2;
+  }
+
+  const x = mirrored ? 1 - nx : nx;
+  const px = x * vw * scale - offsetX;
+  const py = ny * vh * scale - offsetY;
+
+  return { px, py };
 }
 
 function getFacePlacement(
   category: "earrings" | "necklaces",
   landmarks: FaceLandmarks,
-  cw: number,
-  ch: number,
+  cw: number, ch: number, vw: number, vh: number,
   mirrored: boolean
 ): Placement | null {
-  const mx = (x: number) => (mirrored ? 1 - x : x);
-  const fw = landmarks.faceWidth * cw;
+  const ltp = (nx: number, ny: number) => landmarkToPixel(nx, ny, cw, ch, vw, vh, mirrored);
+  const fw = landmarks.faceWidth; // normalized
+
+  // Compute face width in pixels using object-cover mapping
+  const lEar = ltp(landmarks.leftEar.x, landmarks.leftEar.y);
+  const rEar = ltp(landmarks.rightEar.x, landmarks.rightEar.y);
+  const fwPx = Math.abs(lEar.px - rEar.px);
 
   if (category === "earrings") {
-    // Use ear tragion landmarks (234/454) — the most lateral points on each ear
-    const lx = mx(landmarks.leftEarlobe.x) * cw;
-    const ly = landmarks.leftEarlobe.y * ch;
-    const rx = mx(landmarks.rightEarlobe.x) * cw;
-    const ry = landmarks.rightEarlobe.y * ch;
-    const size = fw * 0.4;
+    const left = ltp(landmarks.leftEarlobe.x, landmarks.leftEarlobe.y);
+    const right = ltp(landmarks.rightEarlobe.x, landmarks.rightEarlobe.y);
+    const size = fwPx * 0.4;
     return {
       type: "dual",
-      // Offset down from tragion so earring dangles below the earlobe
-      left: { x: lx, y: ly + size * 0.55, size },
-      right: { x: rx, y: ry + size * 0.55, size },
+      left: { x: left.px, y: left.py + size * 0.55, size },
+      right: { x: right.px, y: right.py + size * 0.55, size },
       rotation: landmarks.rotationAngle,
     };
   }
 
   if (category === "necklaces") {
-    const x = mx(landmarks.neckCenter.x) * cw;
-    const y = landmarks.neckCenter.y * ch;
-    const size = fw * 1.3;
+    const neck = ltp(landmarks.neckCenter.x, landmarks.neckCenter.y);
+    const size = fwPx * 1.3;
     return {
       type: "single",
-      position: { x, y: y + size * 0.05, size },
+      position: { x: neck.px, y: neck.py + size * 0.05, size },
       rotation: landmarks.rotationAngle * 0.4,
     };
   }
@@ -70,33 +110,34 @@ function getFacePlacement(
 function getHandPlacement(
   category: "rings" | "bracelets",
   hand: HandLandmarks,
-  cw: number,
-  ch: number,
+  cw: number, ch: number, vw: number, vh: number,
   mirrored: boolean
 ): Placement | null {
-  const mx = (x: number) => (mirrored ? 1 - x : x);
-  const hw = hand.handWidth * cw;
+  const ltp = (nx: number, ny: number) => landmarkToPixel(nx, ny, cw, ch, vw, vh, mirrored);
+
+  // Hand width in pixels
+  const ib = ltp(hand.indexFingerBase.x, hand.indexFingerBase.y);
+  const pb = ltp(hand.pinkyBase.x, hand.pinkyBase.y);
+  const hwPx = Math.sqrt(Math.pow(ib.px - pb.px, 2) + Math.pow(ib.py - pb.py, 2));
 
   if (category === "rings") {
     const base = hand.ringFingerBase;
     const mid = hand.ringFingerMid;
-    const x = mx((base.x + mid.x) / 2) * cw;
-    const y = ((base.y + mid.y) / 2) * ch;
-    const size = hw * 0.45;
+    const midPt = ltp((base.x + mid.x) / 2, (base.y + mid.y) / 2);
+    const size = hwPx * 0.45;
     const dx = mid.x - base.x;
     const dy = mid.y - base.y;
     const angle = Math.atan2(dy, mirrored ? -dx : dx) * (180 / Math.PI);
-    return { type: "single", position: { x, y, size }, rotation: angle };
+    return { type: "single", position: { x: midPt.px, y: midPt.py, size }, rotation: angle };
   }
 
   if (category === "bracelets") {
-    const x = mx(hand.wrist.x) * cw;
-    const y = hand.wrist.y * ch;
-    const size = hw * 1.4;
+    const wrist = ltp(hand.wrist.x, hand.wrist.y);
+    const size = hwPx * 1.4;
     const dx = hand.middleFingerBase.x - hand.wrist.x;
     const dy = hand.middleFingerBase.y - hand.wrist.y;
     const angle = Math.atan2(dy, mirrored ? -dx : dx) * (180 / Math.PI) - 90;
-    return { type: "single", position: { x, y, size }, rotation: angle };
+    return { type: "single", position: { x: wrist.px, y: wrist.py, size }, rotation: angle };
   }
 
   return null;
@@ -108,6 +149,8 @@ const ARJewelleryOverlay = ({
   handLandmarks,
   containerWidth,
   containerHeight,
+  videoWidth,
+  videoHeight,
   mirrored = true,
 }: ARJewelleryOverlayProps) => {
   // Estimate head pose from face landmarks
@@ -116,7 +159,6 @@ const ARJewelleryOverlay = ({
     const all = faceLandmarks.all;
     if (!all || all.length < 400) return null;
 
-    // Yaw: nose tip vs face center (ears midpoint)
     const noseTip = all[1];
     const leftEar = all[234];
     const rightEar = all[454];
@@ -124,7 +166,6 @@ const ARJewelleryOverlay = ({
     const faceWidth = Math.abs(leftEar.x - rightEar.x);
     const yaw = faceWidth > 0 ? ((noseTip.x - faceCenterX) / faceWidth) * 1.8 : 0;
 
-    // Pitch: forehead vs chin vertical relationship with depth
     const forehead = all[10];
     const chin = all[152];
     const faceHeight = Math.abs(forehead.y - chin.y);
@@ -132,23 +173,24 @@ const ARJewelleryOverlay = ({
     const noseToChin = chin.y - noseTip.y;
     const pitch = faceHeight > 0 ? ((noseToChin - noseToForehead) / faceHeight) * 0.8 : 0;
 
-    // Roll: ear-to-ear tilt
     const roll = Math.atan2(rightEar.y - leftEar.y, rightEar.x - leftEar.x);
 
     return { yaw: mirrored ? -yaw : yaw, pitch, roll: mirrored ? -roll : roll };
   }, [faceLandmarks, mirrored]);
 
   const placement = useMemo(() => {
+    const vw = videoWidth;
+    const vh = videoHeight;
     if (item.category === "earrings" || item.category === "necklaces") {
       if (!faceLandmarks) return null;
-      return getFacePlacement(item.category, faceLandmarks, containerWidth, containerHeight, mirrored);
+      return getFacePlacement(item.category, faceLandmarks, containerWidth, containerHeight, vw, vh, mirrored);
     }
     if (item.category === "rings" || item.category === "bracelets") {
       if (handLandmarks.length === 0) return null;
-      return getHandPlacement(item.category, handLandmarks[0], containerWidth, containerHeight, mirrored);
+      return getHandPlacement(item.category, handLandmarks[0], containerWidth, containerHeight, vw, vh, mirrored);
     }
     return null;
-  }, [item.category, faceLandmarks, handLandmarks, containerWidth, containerHeight, mirrored]);
+  }, [item.category, faceLandmarks, handLandmarks, containerWidth, containerHeight, videoWidth, videoHeight, mirrored]);
 
   if (!placement) return null;
 

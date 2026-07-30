@@ -15,6 +15,7 @@ const TryOn = () => {
   const [faceLandmarks, setFaceLandmarks] = useState<FaceLandmarks | null>(null);
   const [handLandmarks, setHandLandmarks] = useState<HandLandmarks[]>([]);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+  const [videoDims, setVideoDims] = useState({ w: 0, h: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Resize observer for container dimensions
@@ -63,6 +64,9 @@ const TryOn = () => {
   const handleTrackingUpdate = useCallback((data: TrackingData) => {
     setFaceLandmarks(data.face);
     setHandLandmarks(data.hands);
+    if (data.videoWidth > 0 && data.videoHeight > 0) {
+      setVideoDims({ w: data.videoWidth, h: data.videoHeight });
+    }
   }, []);
 
   // Capture screenshot
@@ -139,6 +143,8 @@ const TryOn = () => {
                 handLandmarks={handLandmarks}
                 containerWidth={containerSize.w}
                 containerHeight={containerSize.h}
+                videoWidth={videoDims.w}
+                videoHeight={videoDims.h}
                 mirrored
               />
             ))}
