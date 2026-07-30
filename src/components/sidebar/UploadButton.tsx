@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import type { JewelleryItem, JewelleryCategory } from "@/data/jewellery";
 
@@ -7,26 +7,44 @@ interface UploadButtonProps {
   onUpload: (item: JewelleryItem) => void;
 }
 
+const ACCEPTED_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 const UploadButton = ({ activeCategory, onUpload }: UploadButtonProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
     if (!file) return;
+
+    if (!ACCEPTED_TYPES.has(file.type)) {
+      setError("Use a PNG, JPEG or WebP image.");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("Image must be 5 MB or smaller.");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
-      const newItem: JewelleryItem = {
-        id: `custom-${Date.now()}`,
+      if (typeof reader.result !== "string") {
+        setError("The image could not be read.");
+        return;
+      }
+      onUpload({
+        id: `custom-${crypto.randomUUID()}`,
         name: file.name.replace(/\.[^.]+$/, ""),
         category: activeCategory,
-        image: reader.result as string,
+        image: reader.result,
         price: "Custom",
-      };
-      onUpload(newItem);
+      });
+      setError(null);
     };
+    reader.onerror = () => setError("The image could not be read.");
     reader.readAsDataURL(file);
-    e.target.value = "";
   };
 
   return (
@@ -34,9 +52,10 @@ const UploadButton = ({ activeCategory, onUpload }: UploadButtonProps) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept=".png,.jpg,.jpeg,.webp"
         onChange={handleUpload}
         className="hidden"
+        aria-label="Upload a custom jewellery image"
       />
       <button
         onClick={() => fileInputRef.current?.click()}
@@ -45,6 +64,7 @@ const UploadButton = ({ activeCategory, onUpload }: UploadButtonProps) => {
         <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         Upload Your Piece
       </button>
+      {error && <p className="mt-2 text-xs text-destructive font-body" role="alert">{error}</p>}
     </div>
   );
 };

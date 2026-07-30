@@ -1,73 +1,65 @@
-# Welcome to your Lovable project
+# Sparkle Try-On
 
-## Project info
+A browser-based augmented-reality jewellery fitting room. Sparkle Try-On uses MediaPipe face and hand landmarks with React Three Fiber to place interactive 3D jewellery on a live camera feed.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## What it can do
 
-## How can I edit this code?
+- Track face landmarks for earrings, necklaces and glasses
+- Track up to two hands for rings and bracelets
+- Render nine built-in 3D jewellery and eyewear models
+- Combine multiple pieces in one look
+- Mirror or unmirror the live camera while keeping AR placement aligned
+- Upload a custom PNG, JPEG or WebP piece (up to 5 MB)
+- Capture a PNG containing both the camera image and visible AR layers
+- Recover gracefully from camera, tracking and WebGL errors
+- Adapt the catalogue and camera experience to mobile and desktop screens
 
-There are several ways of editing your application.
+All camera processing happens in the browser. The app does not upload or store camera frames.
 
-**Use Lovable**
+## Tech stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- React 18 and TypeScript
+- Vite
+- MediaPipe Tasks Vision
+- Three.js, React Three Fiber and Drei
+- Tailwind CSS and shadcn/ui
+- Vitest
+- GitHub Actions
 
-Changes made via Lovable will be committed automatically to this repo.
+## Run locally
 
-**Use your preferred IDE**
+Requirements: Node.js 20 or newer and npm.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone https://github.com/Arul1998/sparkle-tryon.git
+cd sparkle-tryon
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open the local URL printed by Vite and choose **Try It On**. Camera access works on localhost; production deployments must use HTTPS.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Quality checks
 
-**Use GitHub Codespaces**
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The CI workflow runs these checks for every push and pull request.
 
-## What technologies are used for this project?
+## Deployment
 
-This project is built with:
+This is a static Vite app and can be deployed to Vercel, Netlify, Cloudflare Pages, GitHub Pages, StackBlitz, Bolt or any host that serves the built `dist` directory over HTTPS.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Build command: `npm run build`  
+Output directory: `dist`
 
-## How can I deploy this project?
+## Browser support and limitations
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Use a current version of Chrome, Edge, Safari or Firefox with WebGL and camera permissions enabled. Landmark accuracy varies with lighting, camera angle and occlusion. Custom uploads are flat image overlays; the built-in collection uses 3D models.
 
-## Can I connect a custom domain to my Lovable project?
+## License
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT
