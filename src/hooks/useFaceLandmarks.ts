@@ -148,22 +148,29 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
         const leftJawEar = face[LANDMARK_INDICES.leftJawEar];
         const rightJawEar = face[LANDMARK_INDICES.rightJawEar];
 
-        // Earlobe = ear tragion x-position with jaw-ear y-position
+        const chin = face[LANDMARK_INDICES.chin];
+        const noseTip = face[LANDMARK_INDICES.noseTip];
+        const forehead = face[LANDMARK_INDICES.forehead];
+
+        const faceWidth = Math.abs(leftEar.x - rightEar.x);
+
+        // Lateral correction: push visible ear's earring outward in profile view
+        const faceCenterX = (leftEar.x + rightEar.x) / 2;
+        const noseOffset = noseTip.x - faceCenterX; // positive = turned showing left ear
+        const boost = Math.abs(noseOffset) * 0.4;
+
         const leftEarlobe: NormalizedLandmark = {
-          x: leftEar.x,
+          x: leftEar.x - (noseOffset > 0 ? boost : boost * 0.15),
           y: leftJawEar.y,
           z: leftEar.z,
           visibility: 1,
         };
         const rightEarlobe: NormalizedLandmark = {
-          x: rightEar.x,
+          x: rightEar.x + (noseOffset < 0 ? boost : boost * 0.15),
           y: rightJawEar.y,
           z: rightEar.z,
           visibility: 1,
         };
-        const chin = face[LANDMARK_INDICES.chin];
-        const noseTip = face[LANDMARK_INDICES.noseTip];
-        const forehead = face[LANDMARK_INDICES.forehead];
 
         const jawLeft = face[LANDMARK_INDICES.jawLeft];
         const jawRight = face[LANDMARK_INDICES.jawRight];
@@ -173,8 +180,6 @@ export function useFaceLandmarks(videoRef: React.RefObject<HTMLVideoElement>) {
           z: chin.z,
           visibility: 1,
         };
-
-        const faceWidth = Math.abs(leftEar.x - rightEar.x);
 
         const leftDist = Math.abs(noseTip.x - leftEar.x);
         const rightDist = Math.abs(noseTip.x - rightEar.x);
