@@ -146,8 +146,7 @@ const ARJewelleryOverlay = ({
         height: size,
         transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
         objectFit: "contain",
-        filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.3))",
-        mixBlendMode: "multiply",
+        filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4)) contrast(1.1) saturate(1.2)",
         transition: "left 0.04s linear, top 0.04s linear, width 0.08s ease, height 0.08s ease",
       }}
       draggable={false}
