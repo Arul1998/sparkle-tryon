@@ -1,6 +1,5 @@
-import { Suspense, useMemo } from "react";
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
 import {
   DiamondStudEarring,
   DropEarring,
@@ -41,20 +40,20 @@ const ARJewellery3D = ({ modelId, x, y, size, rotation }: ARJewellery3DProps) =>
         width: size,
         height: size,
         transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-        transition: "left 0.04s linear, top 0.04s linear, width 0.08s ease, height 0.08s ease",
+        transition: "left 0.05s linear, top 0.05s linear, width 0.08s ease, height 0.08s ease",
       }}
     >
       <Canvas
         camera={{ position: [0, 0, 3], fov: 35 }}
-        gl={{ alpha: true, antialias: true }}
+        gl={{ alpha: true, antialias: true, premultipliedAlpha: false }}
         style={{ background: "transparent" }}
         frameloop="always"
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 5, 5]} intensity={1.5} />
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[5, 5, 5]} intensity={1.8} />
+          <directionalLight position={[-3, 3, -3]} intensity={0.6} color="#ffeedd" />
           <pointLight position={[0, -2, 3]} intensity={0.5} color="#ffd700" />
-          <Environment preset="studio" />
           <ModelComponent />
         </Suspense>
       </Canvas>
