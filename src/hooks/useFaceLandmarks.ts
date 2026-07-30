@@ -24,9 +24,9 @@ const LANDMARK_INDICES = {
   chin: 152,
   leftEar: 234,
   rightEar: 454,
-  // Earlobe / tragion bottom — where earrings hang
-  leftEarlobe: 177,
-  rightEarlobe: 401,
+  // Use ear tragion (234/454) as earlobe anchor — most lateral face points
+  leftEarlobe: 234,
+  rightEarlobe: 454,
   forehead: 10,
   jawLeft: 172,
   jawRight: 397,
