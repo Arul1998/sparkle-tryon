@@ -10,7 +10,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="font-display text-xl text-gold-gradient mb-2">Jewel AR</p>
+          <p className="font-display text-xl text-gold-gradient mb-2">Sparkle</p>
           <p className="text-muted-foreground text-xs font-body tracking-wider">
             Virtual Try-On Experience
           </p>

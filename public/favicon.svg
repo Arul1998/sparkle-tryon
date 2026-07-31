@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Sparkle Try-On">
+  <defs>
+    <linearGradient id="gold" x1="12" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E8D5A3"/>
+      <stop offset="45%" stop-color="#C4A35A"/>
+      <stop offset="100%" stop-color="#8F7340"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="24" y1="16" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF6DD" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#C4A35A" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#11100F"/>
+  <!-- diamond facet -->
+  <path fill="url(#gold)" d="M32 10 48 28 32 54 16 28Z"/>
+  <path fill="url(#shine)" d="M32 10 40 28 32 40 24 28Z"/>
+  <path fill="none" stroke="#F3E6C2" stroke-opacity=".35" stroke-width="1.2" d="M16 28h32M32 10v44M24 28l8 26 8-26"/>
+  <!-- sparkle accents -->
+  <path fill="#E8D5A3" d="M50 14l1.4 3.2L54.6 18.6 51.4 20 50 23.2 48.6 20 45.4 18.6 48.6 17.2Z"/>
+  <path fill="#C4A35A" d="M12 42l1 2.2 2.4.8-2.4.8-1 2.2-1-2.2-2.4-.8 2.4-.8Z"/>
+</svg>
